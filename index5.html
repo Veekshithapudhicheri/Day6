@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f6f5ef">
+	<title>Handplay | Rock Paper Scissors</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+		:root {
+			color-scheme: light;
+			--page: #f6f5ef;
+			--surface: #fffefa;
+			--surface-soft: #eeeee6;
+			--ink: #20231f;
+			--muted: #777b72;
+			--line: #e4e4da;
+			--accent: #d94935;
+			--accent-dark: #b93426;
+			--green: #27755a;
+			--shadow: 0 18px 50px rgba(40, 43, 34, .07);
+		}
+
+		* { box-sizing: border-box; }
+		body {
+			min-width: 320px;
+			margin: 0;
+			background: var(--page);
+			color: var(--ink);
+			font-family: 'DM Sans', sans-serif;
+			transition: background .25s ease, color .25s ease;
+		}
+		body.dark {
+			color-scheme: dark;
+			--page: #191d1b;
+			--surface: #232925;
+			--surface-soft: #2d342f;
+			--ink: #f2f1e9;
+			--muted: #a8afa7;
+			--line: #3b443d;
+			--accent: #f07862;
+			--accent-dark: #ff9b83;
+			--green: #83c6a4;
+			--shadow: 0 18px 50px rgba(0, 0, 0, .19);
+		}
+		button, select { font: inherit; }
+		button { color: inherit; }
+		button:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+		.app { max-width: 1180px; margin: 0 auto; padding: 0 28px 48px; }
+		.topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+		.brand { display: flex; align-items: center; gap: 11px; font: 700 19px 'Space Grotesk', sans-serif; letter-spacing: 0; }
+		.brand-mark { display: grid; width: 35px; height: 35px; place-items: center; border-radius: 11px; color: white; background: var(--accent); font-size: 19px; }
+		.top-actions { display: flex; align-items: center; gap: 10px; }
+		.icon-button { width: 42px; height: 42px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; font-size: 18px; }
+		.icon-button:hover { background: var(--surface-soft); }
+		.eyebrow { margin: 0 0 9px; color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; }
+		.intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 37px 0 25px; }
+		h1, h2, p { margin-top: 0; }
+		h1 { margin-bottom: 7px; font: 700 clamp(30px, 5vw, 43px)/1.08 'Space Grotesk', sans-serif; letter-spacing: 0; }
+		.intro-copy { margin: 0; color: var(--muted); font-size: 14px; }
+		.settings { display: flex; gap: 10px; }
+		.setting { display: grid; gap: 6px; }
+		.setting label { color: var(--muted); font-size: 11px; font-weight: 700; }
+		select { min-width: 132px; padding: 10px 30px 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-size: 13px; cursor: pointer; }
+		.layout { display: grid; grid-template-columns: minmax(0, 1fr) 294px; gap: 20px; align-items: start; }
+		.game-panel, .side-panel { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); }
+		.game-panel { overflow: hidden; }
+		.match-top { display: flex; justify-content: space-between; align-items: center; padding: 19px 23px; border-bottom: 1px solid var(--line); }
+		.match-label { color: var(--muted); font-size: 12px; font-weight: 600; }
+		.match-label strong { color: var(--ink); font-size: 13px; }
+		.round-pill { padding: 7px 10px; border-radius: 20px; background: var(--surface-soft); color: var(--muted); font-size: 11px; font-weight: 700; }
+		.arena { display: grid; grid-template-columns: 1fr 80px 1fr; align-items: center; gap: 14px; padding: 33px 26px 24px; }
+		.contestant { text-align: center; }
+		.contestant-name { margin-bottom: 13px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+		.hand-display { display: grid; width: 126px; height: 126px; margin: 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 26px; background: var(--surface-soft); font-size: 58px; transition: transform .24s ease, background .2s ease; }
+		.hand-display.reveal { animation: reveal .4s cubic-bezier(.2,.8,.2,1); }
+		@keyframes reveal { 0% { transform: scale(.86) rotate(-7deg); } 65% { transform: scale(1.06) rotate(2deg); } 100% { transform: scale(1); } }
+		.versus { color: var(--muted); font: 700 12px 'Space Grotesk', sans-serif; text-align: center; }
+		.result-message { min-height: 27px; padding: 0 16px; color: var(--ink); font: 600 17px 'Space Grotesk', sans-serif; text-align: center; }
+		.result-message.win { color: var(--green); }
+		.result-message.loss { color: var(--accent); }
+		.result-message small { display: block; min-height: 16px; margin-top: 5px; color: var(--muted); font: 400 12px 'DM Sans', sans-serif; }
+		.choices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; max-width: 490px; margin: 20px auto 25px; padding: 0 20px; }
+		.choice { min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface); cursor: pointer; transition: transform .16s ease, border-color .16s ease, background .16s ease; }
+		.choice:hover:not(:disabled) { transform: translateY(-3px); border-color: var(--accent); background: var(--surface-soft); }
+		.choice:active:not(:disabled) { transform: scale(.97); }
+		.choice:disabled { opacity: .45; cursor: not-allowed; }
+		.choice-emoji { font-size: 28px; line-height: 1; }
+		.choice-name { font-size: 12px; font-weight: 700; }
+		.score-strip { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+		.score-cell { padding: 15px 10px; text-align: center; }
+		.score-cell + .score-cell { border-left: 1px solid var(--line); }
+		.score-number { display: block; font: 700 22px 'Space Grotesk', sans-serif; }
+		.score-caption { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+		.side-stack { display: grid; gap: 16px; }
+		.side-panel { padding: 19px; }
+		.panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+		h2 { margin: 0; font: 700 15px 'Space Grotesk', sans-serif; }
+		.panel-count { color: var(--muted); font-size: 11px; }
+		.history-list { display: grid; gap: 10px; }
+		.history-empty { padding: 12px 0 4px; color: var(--muted); font-size: 12px; text-align: center; }
+		.history-item { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 9px; font-size: 12px; }
+		.history-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--surface-soft); font-size: 15px; }
+		.history-main { font-weight: 700; }
+		.history-detail { margin-top: 2px; color: var(--muted); font-size: 10px; }
+		.history-outcome { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+		.history-outcome.win { color: var(--green); }
+		.history-outcome.loss { color: var(--accent); }
+		.achievement-list { display: grid; gap: 11px; }
+		.achievement { display: grid; grid-template-columns: 33px 1fr; align-items: center; gap: 9px; opacity: .48; }
+		.achievement.unlocked { opacity: 1; }
+		.achievement-icon { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; background: var(--surface-soft); font-size: 16px; filter: grayscale(1); }
+		.achievement.unlocked .achievement-icon { filter: none; background: #f7e9c8; }
+		body.dark .achievement.unlocked .achievement-icon { background: #574c32; }
+		.achievement-name { font-size: 11px; font-weight: 700; }
+		.achievement-description { margin-top: 2px; color: var(--muted); font-size: 10px; }
+		.footer-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding-top: 1px; }
+		.save-note { color: var(--muted); font-size: 10px; }
+		.reset-button, .replay-button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); cursor: pointer; font-size: 11px; font-weight: 700; }
+		.reset-button:hover, .replay-button:hover { border-color: var(--accent); color: var(--accent); }
+		.replay-wrap { display: none; margin: -9px 0 21px; text-align: center; }
+		.replay-wrap.visible { display: block; }
+		.replay-button { border-color: var(--accent); color: var(--accent); }
+		.toast { position: fixed; right: 22px; bottom: 22px; z-index: 2; max-width: min(360px, calc(100vw - 32px)); padding: 13px 17px; border-radius: 11px; background: var(--ink); color: var(--surface); font-size: 13px; box-shadow: var(--shadow); opacity: 0; transform: translateY(12px); pointer-events: none; transition: opacity .2s, transform .2s; }
+		.toast.show { opacity: 1; transform: translateY(0); }
+		.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+		@media (max-width: 780px) {
+			.app { padding: 0 18px 32px; }
+			.intro { align-items: start; flex-direction: column; padding-top: 28px; }
+			.settings { width: 100%; }
+			.setting { flex: 1; }
+			select { width: 100%; min-width: 0; }
+			.layout { grid-template-columns: 1fr; }
+			.side-stack { grid-template-columns: 1fr 1fr; align-items: start; }
+		}
+		@media (max-width: 500px) {
+			.app { padding: 0 14px 25px; }
+			.topbar { height: 68px; }
+			.brand { font-size: 17px; }
+			.icon-button { width: 39px; height: 39px; }
+			h1 { font-size: 32px; }
+			.intro { gap: 18px; }
+			.settings { gap: 8px; }
+			.setting label { font-size: 10px; }
+			select { padding-left: 9px; font-size: 12px; }
+			.match-top { padding: 16px; }
+			.arena { grid-template-columns: 1fr 44px 1fr; gap: 2px; padding: 25px 12px 19px; }
+			.hand-display { width: min(25vw, 102px); height: min(25vw, 102px); border-radius: 21px; font-size: 48px; }
+			.contestant-name { font-size: 10px; }
+			.choices { gap: 8px; margin-top: 16px; padding: 0 12px; }
+			.choice { min-height: 87px; }
+			.side-stack { grid-template-columns: 1fr; }
+			.side-panel { padding: 17px; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+		}
+	</style>
+</head>
+<body>
+	<div class="app">
+		<header class="topbar">
+			<div class="brand"><span class="brand-mark" aria-hidden="true">✳</span> handplay</div>
+			<div class="top-actions">
+				<button class="icon-button" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch theme">☾</button>
+			</div>
+		</header>
+
+		<main>
+			<section class="intro" aria-labelledby="page-title">
+				<div>
+					<p class="eyebrow">A tiny game of big decisions</p>
+					<h1 id="page-title">Rock. Paper. Scissors.</h1>
+					<p class="intro-copy">Your move. The computer's move. May the best hand win.</p>
+				</div>
+				<div class="settings" aria-label="Game settings">
+					<div class="setting">
+						<label for="match-mode">MATCH</label>
+						<select id="match-mode" aria-label="Choose match format">
+							<option value="classic">Classic</option>
+							<option value="3">First to 3</option>
+							<option value="5">First to 5</option>
+						</select>
+					</div>
+					<div class="setting">
+						<label for="difficulty">DIFFICULTY</label>
+						<select id="difficulty" aria-label="Choose computer difficulty">
+							<option value="easy">Easy</option>
+							<option value="medium">Medium</option>
+							<option value="hard">Hard</option>
+						</select>
+					</div>
+				</div>
+			</section>
+
+			<div class="layout">
+				<section class="game-panel" aria-label="Game board">
+					<div class="match-top">
+						<div class="match-label">MATCH SCORE <strong id="match-score">You 0 — 0 CPU</strong></div>
+						<span class="round-pill" id="round-label">ROUND 1</span>
+					</div>
+					<div class="arena" aria-label="Player and computer choices">
+						<div class="contestant">
+							<div class="contestant-name">You</div>
+							<div class="hand-display" id="player-hand" aria-label="Your move">?</div>
+						</div>
+						<div class="versus" aria-hidden="true">VS</div>
+						<div class="contestant">
+							<div class="contestant-name">Computer</div>
+							<div class="hand-display" id="computer-hand" aria-label="Computer's move">?</div>
+						</div>
+					</div>
+					<div class="result-message" id="result-message" role="status" aria-live="polite">Choose your move to play<small>Rock, paper, or scissors?</small></div>
+					<div class="choices" role="group" aria-label="Choose your move">
+						<button class="choice" type="button" data-move="rock" aria-label="Choose rock"><span class="choice-emoji" aria-hidden="true">✊</span><span class="choice-name">Rock</span></button>
+						<button class="choice" type="button" data-move="paper" aria-label="Choose paper"><span class="choice-emoji" aria-hidden="true">✋</span><span class="choice-name">Paper</span></button>
+						<button class="choice" type="button" data-move="scissors" aria-label="Choose scissors"><span class="choice-emoji" aria-hidden="true">✌️</span><span class="choice-name">Scissors</span></button>
+					</div>
+					<div class="replay-wrap" id="replay-wrap"><button class="replay-button" id="replay-button" type="button">↻ &nbsp; Play next match</button></div>
+					<div class="score-strip" aria-label="Overall score">
+						<div class="score-cell"><span class="score-number" id="wins">0</span><span class="score-caption">Wins</span></div>
+						<div class="score-cell"><span class="score-number" id="draws">0</span><span class="score-caption">Draws</span></div>
+						<div class="score-cell"><span class="score-number" id="losses">0</span><span class="score-caption">Losses</span></div>
+					</div>
+				</section>
+
+				<aside class="side-stack" aria-label="Game stats">
+					<section class="side-panel" aria-labelledby="history-title">
+						<div class="panel-heading"><h2 id="history-title">Recent rounds</h2><span class="panel-count" id="history-count">0 played</span></div>
+						<div class="history-list" id="history-list"><div class="history-empty">Your rounds will show up here.</div></div>
+					</section>
+					<section class="side-panel" aria-labelledby="achievements-title">
+						<div class="panel-heading"><h2 id="achievements-title">Achievements</h2><span class="panel-count" id="achievement-count">0 / 4</span></div>
+						<div class="achievement-list" id="achievement-list"></div>
+					</section>
+					<div class="footer-actions">
+						<span class="save-note" id="save-note">Progress saves on this device</span>
+						<button class="reset-button" id="reset-button" type="button">Reset progress</button>
+					</div>
+				</aside>
+			</div>
+		</main>
+	</div>
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+	<script>
+		(() => {
+			'use strict';
+			const STORAGE_KEY = 'handplay-progress-v1';
+			const moves = ['rock', 'paper', 'scissors'];
+			const moveIcons = { rock: '✊', paper: '✋', scissors: '✌️' };
+			const beats = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+			const achievements = [
+				{ id: 'first-win', icon: '🌱', name: 'First win', description: 'Win your first round.', earned: state => state.wins >= 1 },
+				{ id: 'hat-trick', icon: '🔥', name: 'Hat trick', description: 'Win three rounds.', earned: state => state.wins >= 3 },
+				{ id: 'draw-club', icon: '🤝', name: 'Draw club', description: 'Play three drawn rounds.', earned: state => state.draws >= 3 },
+				{ id: 'ten-rounds', icon: '🏅', name: 'Getting serious', description: 'Play ten rounds.', earned: state => state.wins + state.losses + state.draws >= 10 }
+			];
+			const defaults = { wins: 0, losses: 0, draws: 0, history: [], mode: 'classic', difficulty: 'easy', dark: false, playerMatch: 0, cpuMatch: 0, round: 1, finished: false, unlocked: [] };
+			let state = loadState();
+			let toastTimer;
+
+			const $ = selector => document.querySelector(selector);
+			const $$ = selector => document.querySelectorAll(selector);
+
+			function loadState() {
+				try {
+					const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+					if (!saved || typeof saved !== 'object') return { ...defaults };
+					return {
+						...defaults,
+						...saved,
+						wins: validCount(saved.wins), losses: validCount(saved.losses), draws: validCount(saved.draws),
+						history: Array.isArray(saved.history) ? saved.history.slice(0, 8).filter(item => item && moves.includes(item.player) && moves.includes(item.computer) && ['win', 'loss', 'draw'].includes(item.result)) : [],
+						mode: ['classic', '3', '5'].includes(saved.mode) ? saved.mode : 'classic',
+						difficulty: ['easy', 'medium', 'hard'].includes(saved.difficulty) ? saved.difficulty : 'easy',
+						playerMatch: validCount(saved.playerMatch), cpuMatch: validCount(saved.cpuMatch),
+						round: Math.max(1, validCount(saved.round)), finished: saved.finished === true,
+						dark: saved.dark === true,
+						unlocked: Array.isArray(saved.unlocked) ? saved.unlocked.filter(id => achievements.some(item => item.id === id)) : []
+					};
+				} catch {
+					return { ...defaults };
+				}
+			}
+
+			function validCount(value) {
+				return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+			}
+
+			function saveState() {
+				try {
+					localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+					$('#save-note').textContent = 'Progress saves on this device';
+				} catch {
+					$('#save-note').textContent = 'Progress could not be saved';
+				}
+			}
+
+			function render() {
+				document.body.classList.toggle('dark', state.dark);
+				$('#theme-toggle').textContent = state.dark ? '☀' : '☾';
+				$('#theme-toggle').setAttribute('aria-label', state.dark ? 'Switch to light mode' : 'Switch to dark mode');
+				$('#match-mode').value = state.mode;
+				$('#difficulty').value = state.difficulty;
+				$('#wins').textContent = state.wins;
+				$('#losses').textContent = state.losses;
+				$('#draws').textContent = state.draws;
+				$('#match-score').textContent = `You ${state.playerMatch} — ${state.cpuMatch} CPU`;
+				$('#round-label').textContent = `ROUND ${state.round}`;
+				$$('.choice').forEach(button => { button.disabled = state.finished; });
+				$('#replay-wrap').classList.toggle('visible', state.finished);
+				renderHistory();
+				renderAchievements();
+			}
+
+			function renderHistory() {
+				const list = $('#history-list');
+				$('#history-count').textContent = `${state.wins + state.losses + state.draws} played`;
+				if (state.history.length === 0) {
+					list.innerHTML = '<div class="history-empty">Your rounds will show up here.</div>';
+					return;
+				}
+				list.innerHTML = state.history.slice(0, 5).map(item => {
+					const label = item.result === 'win' ? 'Win' : item.result === 'loss' ? 'Loss' : 'Draw';
+					return `<div class="history-item"><span class="history-icon" aria-hidden="true">${moveIcons[item.player]}</span><div><div class="history-main">${label}</div><div class="history-detail">${capitalize(item.player)} vs ${capitalize(item.computer)}</div></div><span class="history-outcome ${item.result}">${label}</span></div>`;
+				}).join('');
+			}
+
+			function renderAchievements() {
+				const list = $('#achievement-list');
+				$('#achievement-count').textContent = `${state.unlocked.length} / ${achievements.length}`;
+				list.innerHTML = achievements.map(item => {
+					const unlocked = state.unlocked.includes(item.id);
+					return `<div class="achievement ${unlocked ? 'unlocked' : ''}"><span class="achievement-icon" aria-hidden="true">${item.icon}</span><div><div class="achievement-name">${item.name}</div><div class="achievement-description">${item.description}</div></div></div>`;
+				}).join('');
+			}
+
+			function computerMove(playerMove) {
+				if (state.difficulty === 'easy' || state.history.length === 0) return randomMove();
+				if (state.difficulty === 'medium') {
+					return Math.random() < 0.55 ? beats[playerMove] : randomMove();
+				}
+				const frequencies = Object.fromEntries(moves.map(move => [move, state.history.filter(item => item.player === move).length]));
+				const mostPlayed = Math.max(...Object.values(frequencies));
+				const likelyMoves = moves.filter(move => frequencies[move] === mostPlayed);
+				if (mostPlayed === 0 || Math.random() < 0.3) return randomMove();
+				const predicted = likelyMoves[Math.floor(Math.random() * likelyMoves.length)];
+				return Object.keys(beats).find(move => beats[move] === predicted);
+			}
+
+			function randomMove() { return moves[Math.floor(Math.random() * moves.length)]; }
+			function capitalize(value) { return value[0].toUpperCase() + value.slice(1); }
+
+			function play(playerMove) {
+				if (state.finished) return;
+				const cpuMove = computerMove(playerMove);
+				const outcome = playerMove === cpuMove ? 'draw' : beats[playerMove] === cpuMove ? 'win' : 'loss';
+				state[outcome === 'win' ? 'wins' : outcome === 'loss' ? 'losses' : 'draws']++;
+				if (outcome === 'win') state.playerMatch++;
+				if (outcome === 'loss') state.cpuMatch++;
+				state.history.unshift({ player: playerMove, computer: cpuMove, result: outcome });
+				state.history = state.history.slice(0, 8);
+
+				const playerHand = $('#player-hand');
+				const computerHand = $('#computer-hand');
+				playerHand.textContent = moveIcons[playerMove];
+				computerHand.textContent = moveIcons[cpuMove];
+				[playerHand, computerHand].forEach(hand => {
+					hand.classList.remove('reveal');
+					void hand.offsetWidth;
+					hand.classList.add('reveal');
+				});
+
+				const message = $('#result-message');
+				message.className = `result-message ${outcome}`;
+				message.firstChild.textContent = outcome === 'win' ? 'You win this round!' : outcome === 'loss' ? 'The computer wins this round.' : 'It’s a draw!';
+				message.querySelector('small').textContent = `${capitalize(playerMove)} ${outcome === 'draw' ? 'ties with' : outcome === 'win' ? 'beats' : 'loses to'} ${capitalize(cpuMove)}`;
+
+				const target = state.mode === 'classic' ? 0 : Number(state.mode);
+				if (target && (state.playerMatch >= target || state.cpuMatch >= target)) {
+					state.finished = true;
+					message.firstChild.textContent = state.playerMatch >= target ? 'Match won! Nicely played.' : 'Match lost. Rematch?';
+					$('#replay-wrap').classList.add('visible');
+				}
+				state.round++;
+				checkAchievements();
+				saveState();
+				render();
+			}
+
+			function checkAchievements() {
+				for (const item of achievements) {
+					if (!state.unlocked.includes(item.id) && item.earned(state)) {
+						state.unlocked.push(item.id);
+						showToast(`${item.icon} Achievement unlocked: ${item.name}`);
+					}
+				}
+			}
+
+			function showToast(message) {
+				const toast = $('#toast');
+				toast.textContent = message;
+				toast.classList.add('show');
+				clearTimeout(toastTimer);
+				toastTimer = setTimeout(() => toast.classList.remove('show'), 2800);
+			}
+
+			function startNextMatch() {
+				state.playerMatch = 0;
+				state.cpuMatch = 0;
+				state.round = 1;
+				state.finished = false;
+				$('#player-hand').textContent = '?';
+				$('#computer-hand').textContent = '?';
+				const message = $('#result-message');
+				message.className = 'result-message';
+				message.firstChild.textContent = 'Choose your move to play';
+				message.querySelector('small').textContent = 'Rock, paper, or scissors?';
+				saveState();
+				render();
+			}
+
+			$$('.choice').forEach(button => button.addEventListener('click', () => play(button.dataset.move)));
+			$('#theme-toggle').addEventListener('click', () => {
+				state.dark = !state.dark;
+				saveState();
+				render();
+			});
+			$('#match-mode').addEventListener('change', event => {
+				state.mode = event.target.value;
+				startNextMatch();
+			});
+			$('#difficulty').addEventListener('change', event => {
+				state.difficulty = event.target.value;
+				saveState();
+			});
+			$('#replay-button').addEventListener('click', startNextMatch);
+			$('#reset-button').addEventListener('click', () => {
+				if (!window.confirm('Reset all scores, history, and achievements? This cannot be undone.')) return;
+				const dark = state.dark;
+				state = { ...defaults, history: [], unlocked: [], dark };
+				$('#player-hand').textContent = '?';
+				$('#computer-hand').textContent = '?';
+				const message = $('#result-message');
+				message.className = 'result-message';
+				message.firstChild.textContent = 'Choose your move to play';
+				message.querySelector('small').textContent = 'Rock, paper, or scissors?';
+				saveState();
+				render();
+				showToast('Progress reset. A fresh start!');
+			});
+
+			render();
+			if (state.history.length) {
+				const latest = state.history[0];
+				$('#player-hand').textContent = moveIcons[latest.player];
+				$('#computer-hand').textContent = moveIcons[latest.computer];
+				const message = $('#result-message');
+				message.className = `result-message ${latest.result}`;
+				message.firstChild.textContent = state.finished ? (state.playerMatch > state.cpuMatch ? 'Match won! Nicely played.' : 'Match lost. Rematch?') : 'Ready for another round?';
+				message.querySelector('small').textContent = `${capitalize(latest.player)} vs ${capitalize(latest.computer)}`;
+			}
+		})();
+	</script>
+</body>
+</html>
